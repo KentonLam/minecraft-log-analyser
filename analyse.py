@@ -29,20 +29,30 @@ class LogAnalyser:
     def __init__(self):
         self.players = defaultdict(lambda: PlayerStats())
         self.online: t.Dict[str, dt.datetime] = dict()
-    
-    def parse_log_text(self, file_object: t.TextIO, date: dt.date):
-        midnight = dt.datetime.combine(date, dt.time.min)
-        print(midnight)
 
-        get_time = lambda line: dt.datetime.combine(date, 
+        self.day = dt.date.min
+        self.midnight = dt.datetime.min
+    
+    def get_time(self, line: str) -> dt.datetime:
+        return dt.datetime.combine(self.day, 
             dt.datetime.strptime(line.split(' ')[0], '[%H:%M:%S]').time())
+
+    def parse_log_text(self, file_object: t.IO[t.Any], day: dt.date):
+        self.day = day
+        self.midnight = dt.datetime.combine(day, dt.time.min)
 
         for line in file_object:
             line = line.rstrip()
-            if line.endswith(' joined the game'):
-                print(get_time(line))
-                print(line)
-                break
+            self.parse_line(line)
+            
+
+    def parse_line(self, line: str) -> bool:
+        if line.endswith(' joined the game'):
+            assert self.players
+            print(self.get_time(line))
+            print(line)
+            return True 
+        return False
 
 
 def main(folder: str):
@@ -56,11 +66,11 @@ def main(folder: str):
         f_path = os.path.join(folder, f)
 
         date_part = '-'.join(f.split('-')[:3])
-        date = dt.datetime.strptime(date_part, '%Y-%m-%d')
+        day = dt.datetime.strptime(date_part, '%Y-%m-%d')
 
         if f.endswith('.gz'):
             with gzip.open(f_path, 'rt') as f_obj:
-                analyser.parse_log_text(f_obj, date.date())
+                analyser.parse_log_text(f_obj, day.date())
         
 
 if __name__ == "__main__":
