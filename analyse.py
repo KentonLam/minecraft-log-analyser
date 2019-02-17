@@ -47,7 +47,7 @@ class LogAnalyser:
 
 def main(folder: str):
     log_files = [x for x in os.listdir(folder) 
-        if (x.endswith('.log') or x.endswith('.log.gz')) 
+        if (x.endswith('.log.gz')) 
             and not (x.startswith('debug') or x.startswith('latest'))]
 
     analyser = LogAnalyser()
