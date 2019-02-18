@@ -13,11 +13,11 @@ class PlayerStats(dict):
         self['days']: t.Dict[dt.date, int] = defaultdict(lambda: 0)
 
     @property
-    def ccl_errors(self):
+    def errors(self):
         return self['ccl_errors']
 
-    @ccl_errors.setter
-    def ccl_errors(self, value):
+    @errors.setter
+    def errors(self, value):
         self['ccl_errors'] = value
 
     @property
@@ -84,6 +84,10 @@ class LogAnalyser:
                 if t:
                     self.player_logoff(player, close_time)
             return True
+        elif " Can't keep up! Did the system time change, or is the server overloaded? " in line:
+            for player, t in self.online.items():
+                if t:
+                    self.players[player].errors += 1
         return False
 
     def new_day(self, new_day: dt.date):
@@ -129,12 +133,12 @@ def main(folder: str):
     with open(os.path.join(folder, 'output.csv'), 'w') as out:
         out.write('Username,')
         out.write(','.join(map(lambda d: d.strftime('%Y-%m-%d'), days)))
-        out.write('\n')
+        out.write(',Errors\n')
         
         for username, stats in analyser.players.items():
             out.write(username + ',')
             out.write(','.join(map(lambda d: str(stats.days[d]), days)))
-            out.write('\n')
+            out.write(f',{stats.errors}\n')
         
 
 if __name__ == "__main__":
